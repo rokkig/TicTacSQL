@@ -23,11 +23,11 @@ public class ContextInitializer implements ServletContextListener{
 	public void contextInitialized(ServletContextEvent sce) {
 		ServletContext sc = sce.getServletContext();
 		
-		boolean is_prod = Boolean.parseBoolean(sc.getInitParameter("IS_PROD"));
+//		boolean is_prod = Boolean.parseBoolean(sc.getInitParameter("IS_PROD"));
 		
-		if(is_prod) {
+//		if(is_prod) {
 //			Initialize production config
-		}else {
+//		}else {
 //			Initialize development config
 			try {
 //			initialize Config File
@@ -36,7 +36,7 @@ public class ContextInitializer implements ServletContextListener{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
+//		}
 		
 		
 	}
