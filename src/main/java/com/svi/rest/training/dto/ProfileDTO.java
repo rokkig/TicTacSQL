@@ -8,11 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ProfileDTO {
 
 	@XmlElement
-	private String gameid;
+	String gameid;
 	@XmlElement
-	private String symbol;
+	String symbol;
 	@XmlElement
-	private String location;
+	Integer location;
 	@XmlElement
 	private String playerid;
 	@XmlElement
@@ -30,10 +30,10 @@ public class ProfileDTO {
 	public void setSymbol(String symbol) {
 		this.symbol = symbol;
 	}
-	public String getLocation() {
+	public Integer getLocation() {
 		return location;
 	}
-	public void setLocation(String location) {
+	public void setLocation(Integer location) {
 		this.location = location;
 	}
 	public String getPlayerid() {
