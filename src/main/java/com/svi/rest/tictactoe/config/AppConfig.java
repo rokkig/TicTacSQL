@@ -1,13 +1,14 @@
-package com.svi.rest.training.config;
+package com.svi.rest.tictactoe.config;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 public enum AppConfig {
-	DELIMITTER("DELIMITTER"),
-	IP_ADDRESS("IP_ADDRESS");
-	private String value ="";
+	PLAYERSFOLDER("PLAYERSFOLDER"),
+	GAMESFOLDER("GAMESFOLDER");
+	
+	private String value = "";
 	private static Properties prop;
 	
 	private AppConfig(String value) {
@@ -19,16 +20,13 @@ public enum AppConfig {
 	}
 	
 	public static void initializeConfig(InputStream is) {
-		synchronized(is) {
-			if(prop == null) {
-				
+		synchronized (is) {
+			if(prop == null) {			
 				try {
 					prop = new Properties();
-					prop.load(is);
-					
+					prop.load(is);					
 					is.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

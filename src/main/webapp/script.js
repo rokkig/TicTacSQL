@@ -45,26 +45,24 @@ readyButton.addEventListener('click', resetGame);
 
 manualRestartButton.addEventListener('click', resetGame)
 
-function createGame() {
+async function createGame() {
     if (document.getElementById('createInput').value != undefined) {
         gameKey = document.getElementById('createInput').value
-        fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/createGame?key=" + gameKey)
-            .then(res => res.text())
-            .then(resData => {
-                if (resData == 'X') {
-                    console.log("waiting for other player")
-                    create.style.display = "none";
-                    waiting.style.display = "flex";
-                    checkLoop();
-                } if (resData == 'O') {
-                    console.log("Let the games begin!")
-                    startGameO();
-
-                } else {
-                    console.log(resData)
-                }
-            })
+        const response = await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/createGame?key=" + gameKey)
             .catch(error => console.warn(error));
+        const resData = await response.text();
+        if (resData == 'X') {
+            console.log("waiting for other player")
+            create.style.display = "none";
+            waiting.style.display = "flex";
+            checkLoop();
+        } if (resData == 'O') {
+            console.log("Let the games begin!")
+            startGameO();
+
+        } else {
+            console.log(resData)
+        }
     }
 }
 
@@ -113,64 +111,71 @@ function startGameO() {
 }
 
 async function checkLoop() {
-    await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/check?key=" + gameKey)
-        .then(res => { return res.text() })
-        .then(resData => {
-            if (resData == "true") {
-                startGameX()
-            } else {
-                checkLoop()
-            }
-        })
+    const response = await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/check?key=" + gameKey)
         .catch(error => console.warn(error));
+        
+    const resData = await response.text();
+
+    if(resData === "true") {
+        startGameX();
+    } else {
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        async function delayLoop() {
+            await sleep(1000);
+            checkLoop();
+        }
+        delayLoop();
+    }  
 }
 
 async function check() {
-    await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/check?key=" + gameKey)
-        .then(res => res.text())
-        .then(resData => {
-            if (resData == "false" && gameKey != undefined) {
-                winningMessageElement.classList.add('show');
-                winningMessageTextElement.innerText = `Game Over!`;
-            } if (resData == "true" && gameKey != undefined) {
-                if (checkWin(X_CLASS)) {
-                    endGame(false, X_CLASS)
-                    console.log("X is the winner!")
-                } else if (checkWin(O_CLASS)) {
-                    endGame(false, O_CLASS)
-                    console.log("O is the winner!")
-                } else if (isDraw()) {
-                    endGame(true)
-                }
+    const res = await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/check?key=" + gameKey)
+    .catch(error => console.warn(error));
+    
+    const resData = await res.text();
+    
+    if (gameKey != undefined){
+        if (resData == "false") {
+            winningMessageElement.classList.add('show');
+            winningMessageTextElement.innerText = `Game Over!`;
+        } else if (resData == "true") {
+            if (checkWin(X_CLASS)) {
+                endGame(false, X_CLASS)
+                console.log("X is the winner!")
+            } else if (checkWin(O_CLASS)) {
+                endGame(false, O_CLASS)
+                console.log("O is the winner!")
+            } else if (isDraw()) {
+                endGame(true)
             }
-        })
-        .then(() => { check(); })
-        .catch(error => console.warn(error));
+        }
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        async function delayLoop() {
+            await sleep(1000);
+            check();
+        }
+        delayLoop();
+    } else{
+        winningMessageElement.classList.add('show');
+        winningMessageTextElement.innerText = `No game found!`;
+    }
 }
 
 async function handleClickX(e) {
-    // boardDetails();
-    await boardDetails();
     const cell = e.target;
     const coordinates = e.target.id.split(",")
     const y = coordinates[0];
     const x = coordinates[1];
-
+    
+    await boardDetails();
+    
     if (xCount <= oCount) {
         fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/move?key=" + gameKey + "&tile=" + X_CLASS + "&y=" + y + "&x=" + x)
             .then(res => { return res.text() })
             .then(resData => {
                 if (resData != "[TAKEN]" && X_CLASS) {
                     placeMark(cell, X_CLASS);
-                    // document.getElementsByClassName("board x").style.cursor = "not-allowed";
-                    // boardDetails();
-                    // check();
                 }
-                // else {
-                //     if(!cell.classList.contains(X_CLASS)){
-                //         placeMark(cell, O_CLASS)
-                //     }
-                // }
             })
             .catch(error => console.warn(error));
     } else {
@@ -179,27 +184,20 @@ async function handleClickX(e) {
 }
 
 async function handleClickO(e) {
-    // boardDetails();
-    // check();
-    await boardDetails();
     const cell = e.target;
     const coordinates = e.target.id.split(",")
     const y = coordinates[0];
     const x = coordinates[1];
-
+    
+    await boardDetails();
+    
     if (xCount > oCount) {
         fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/move?key=" + gameKey + "&tile=" + O_CLASS + "&y=" + y + "&x=" + x)
             .then(res => { return res.text() })
             .then(resData => {
                 if (resData != "[TAKEN]") {
                     placeMark(cell, O_CLASS)
-                    // document.getElementsByClassName("board o").style.cursor = "not-allowed";
-                    // boardDetails();
-                    // check();
                 }
-                // else {
-                //     placeMark(cell, X_CLASS)
-                // }
             })
             .catch(error => console.warn(error));
     } else {
@@ -208,7 +206,6 @@ async function handleClickO(e) {
 }
 
 function endGame(draw, currentClass) {
-    // boardDetails();
     if (draw) {
         winningMessageTextElement.innerText = "Draw!"
     } else {
@@ -236,29 +233,30 @@ function checkWin(currentClass) {
 }
 
 async function boardDetails() {
-    await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/board?key=" + gameKey)
-        .then(res => { return res.text() })
-        .then(resData => {
-            xCount = 0;
-            oCount = 0;
-            boardCheck = resData.split(":");
-            let i = 0;
-            do {
-                if (boardCheck?.[i] == 'x') {
-                    cellElements[i].classList.add('x')
-                    xCount++;
-                } else if (boardCheck?.[i] == 'o') {
-                    cellElements[i].classList.add('o')
-                    oCount++;
-                } i++
-            } while (i < boardCheck.length);
-            // if (xCount <= oCount) {
-            //     document.getElementsByClassName("board x").style.cursor = "allowed";
-            // } if (xCount > oCount) {
-            //     document.getElementsByClassName("board o").style.cursor = "allowed";
-            // }
-        })
-        .then(() => { boardDetails(); })
+    const response = await fetch("http://3.210.183.75:8080/tictactoe/tictactoeserver/board?key=" + gameKey)
+    .catch(error => console.warn(error));
+    
+    const resData = await response.text();
 
-        .catch(error => console.warn(error));
+    xCount = 0;
+    oCount = 0;
+    boardCheck = resData.split(":");
+    let i = 0;
+
+    do {
+        if (boardCheck?.[i] == 'x') {
+            cellElements[i].classList.add('x')
+            xCount++;
+        } else if (boardCheck?.[i] == 'o') {
+            cellElements[i].classList.add('o')
+            oCount++;
+        } i++
+    } while (i < boardCheck.length);
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    async function delayLoop() {
+        await sleep(1000);
+        boardDetails();
+    }
+    delayLoop();
 }
